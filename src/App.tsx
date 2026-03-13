@@ -33,6 +33,16 @@ const TESTIMONIALS = [
 
 const CLOUD_PROVIDERS = ["AWS", "Google Cloud", "Azure", "DigitalOcean", "On-premise", "None yet"];
 const DEVOPS_TOOLS = ["Docker", "Kubernetes", "Terraform", "Jenkins", "GitHub Actions", "GitLab CI", "Ansible", "None"];
+const MAIN_GOALS = [
+  "Cut cloud costs",
+  "Improve reliability / uptime",
+  "Faster deployments",
+  "Security & compliance",
+  "Scale infrastructure",
+  "Migrate to cloud",
+  "Setup CI/CD pipeline",
+  "Monitoring & observability"
+];
 
 const COLUMNS = [
   [...TESTIMONIALS].sort(() => 0.5 - Math.random()),
@@ -52,9 +62,8 @@ export default function App() {
     cloudProviders: [] as string[],
     devOpsTools: [] as string[],
     cloudSpend: "",
-    mainGoals: "",
+    mainGoals: [] as string[],
     painPoint: "",
-    urgency: 50,
     budget: "",
     startDate: "",
     engagementType: "",
@@ -136,6 +145,51 @@ export default function App() {
 
       {/* Right Section: Form */}
       <section className="right-section flex flex-col justify-center relative py-8">
+        {/* Premium Step Indicator */}
+        {!isSubmitted && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute top-10 right-10 z-10"
+          >
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              {/* Background Glow */}
+              <div className="absolute inset-0 bg-white/5 blur-xl rounded-full" />
+              
+              {/* SVG Progress Ring */}
+              <svg className="absolute w-full h-full -rotate-90">
+                <circle 
+                  cx="28" cy="28" r="26" 
+                  className="stroke-white/5 fill-none" 
+                  strokeWidth="1.5" 
+                />
+                <motion.circle 
+                  cx="28" cy="28" r="26" 
+                  className="stroke-white fill-none" 
+                  strokeWidth="2" 
+                  strokeDasharray="163" // 2 * PI * r (r=26)
+                  animate={{ strokeDashoffset: 163 - (163 * (step / 4)) }}
+                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              {/* Step Info */}
+              <div className="flex flex-col items-center justify-center">
+                <motion.span 
+                  key={step}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-lg font-bold text-white leading-none"
+                >
+                  {step}
+                </motion.span>
+                <span className="text-[8px] uppercase tracking-[0.2em] text-white/30 font-bold mt-1">Step</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         <div className="max-w-xl mx-auto w-full">
           {/* Static Main Heading for all steps */}
           {!isSubmitted && (
@@ -345,23 +399,40 @@ export default function App() {
                     </select>
                   </motion.div>
 
-                  {/* DevOps Tools Dropdown */}
+                  {/* DevOps Tools Multi-select */}
                   <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
                   >
                     <label className="boxed-label">What DevOps tools do you use?</label>
-                    <select 
-                      className="boxed-input cursor-pointer appearance-none mt-1"
-                      value={formData.devOpsTools[0] || ""}
-                      onChange={(e) => setFormData({ ...formData, devOpsTools: [e.target.value] })}
-                    >
-                      <option value="">Select tool</option>
-                      {DEVOPS_TOOLS.map((tool) => (
-                        <option key={tool} value={tool}>{tool}</option>
-                      ))}
-                    </select>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {DEVOPS_TOOLS.map((tool) => {
+                        const isSelected = formData.devOpsTools.includes(tool);
+                        return (
+                          <button
+                            key={tool}
+                            onClick={() => {
+                              setFormData(prev => {
+                                if (tool === "None") return { ...prev, devOpsTools: ["None"] };
+                                const updated = isSelected 
+                                  ? prev.devOpsTools.filter(t => t !== tool)
+                                  : [...prev.devOpsTools.filter(t => t !== "None"), tool];
+                                return { ...prev, devOpsTools: updated };
+                              });
+                            }}
+                            className={cn(
+                              "px-3 py-1.5 rounded-full border text-xs transition-all duration-300",
+                              isSelected 
+                                ? "bg-white text-black border-white font-bold" 
+                                : "bg-white/5 text-white/50 border-white/10 hover:border-white/30"
+                            )}
+                          >
+                            {tool}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </motion.div>
 
                   {/* Cloud Spend */}
@@ -422,28 +493,39 @@ export default function App() {
                 </motion.div>
 
                 <div className="space-y-4">
-                  {/* Goals Dropdown */}
+                  {/* Goals Multi-select Pills */}
                   <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
                   >
                     <label className="boxed-label">What are your main goals?</label>
-                    <select 
-                      className="boxed-input cursor-pointer appearance-none mt-1"
-                      value={formData.mainGoals}
-                      onChange={(e) => setFormData({ ...formData, mainGoals: e.target.value })}
-                    >
-                      <option value="">Select a goal</option>
-                      <option value="costs">Cut cloud costs</option>
-                      <option value="reliability">Improve reliability / uptime</option>
-                      <option value="deployments">Faster deployments</option>
-                      <option value="security">Security & compliance</option>
-                      <option value="scaling">Scale infrastructure</option>
-                      <option value="migration">Migrate to cloud</option>
-                      <option value="cicd">Setup CI/CD pipeline</option>
-                      <option value="monitoring">Monitoring & observability</option>
-                    </select>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {MAIN_GOALS.map((goal) => {
+                        const isSelected = formData.mainGoals.includes(goal);
+                        return (
+                          <button
+                            key={goal}
+                            onClick={() => {
+                              setFormData(prev => {
+                                const updated = isSelected 
+                                  ? prev.mainGoals.filter(g => g !== goal)
+                                  : [...prev.mainGoals, goal];
+                                return { ...prev, mainGoals: updated };
+                              });
+                            }}
+                            className={cn(
+                              "px-3 py-1.5 rounded-full border text-[11px] transition-all duration-300",
+                              isSelected 
+                                ? "bg-white text-black border-white font-bold" 
+                                : "bg-white/5 text-white/50 border-white/10 hover:border-white/30"
+                            )}
+                          >
+                            {goal}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </motion.div>
 
                   {/* Pain Points Textarea */}
@@ -459,34 +541,6 @@ export default function App() {
                       value={formData.painPoint}
                       onChange={(e) => setFormData({ ...formData, painPoint: e.target.value })}
                     />
-                  </motion.div>
-
-                  {/* Urgency Slider */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.6 }}
-                    className="space-y-3"
-                  >
-                    <label className="boxed-label">How urgent is this project?</label>
-                    <div className="flex items-center gap-4">
-                      <span className="text-xs text-white/40 font-medium">Exploring</span>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        className="flex-1 accent-white h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                        value={formData.urgency}
-                        onChange={(e) => setFormData({ ...formData, urgency: parseInt(e.target.value) })}
-                      />
-
-                      <span className="text-sm font-bold text-white min-w-[120px] text-right">
-                        {formData.urgency <= 20 ? "Just exploring" : 
-                         formData.urgency <= 40 ? "Low priority" : 
-                         formData.urgency <= 60 ? "Moderate" : 
-                         formData.urgency <= 80 ? "High Priority" : "ASAP"}
-                      </span>
-                    </div>
                   </motion.div>
 
                   {/* Footer Buttons */}
