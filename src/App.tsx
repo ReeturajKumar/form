@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Facebook, 
   Instagram, 
   Linkedin, 
   Twitter, 
-  ArrowRight
+  ArrowRight,
+  Check
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -29,15 +31,38 @@ const TESTIMONIALS = [
   { name: "Emma Thompson", text: "They helped us reach a wider audience than we ever thought possible. Outstanding work.", country: "au" },
 ];
 
+const CLOUD_PROVIDERS = ["AWS", "Google Cloud", "Azure", "DigitalOcean", "On-premise", "None yet"];
+const DEVOPS_TOOLS = ["Docker", "Kubernetes", "Terraform", "Jenkins", "GitHub Actions", "GitLab CI", "Ansible", "None"];
+
+const COLUMNS = [
+  [...TESTIMONIALS].sort(() => 0.5 - Math.random()),
+  [...TESTIMONIALS].sort(() => 0.5 - Math.random()),
+  [...TESTIMONIALS].sort(() => 0.5 - Math.random()),
+];
+
 export default function App() {
+  const [step, setStep] = useState(1);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
-    services: [] as string[],
     name: "",
-    email: "",
-    phone: "",
-    message: ""
+    industry: "",
+    companySize: "",
+    role: "",
+    website: "",
+    cloudProviders: [] as string[],
+    devOpsTools: [] as string[],
+    cloudSpend: "",
+    mainGoals: "",
+    painPoint: "",
+    urgency: 50,
+    budget: "",
+    startDate: "",
+    engagementType: "",
+    notes: ""
   });
 
+  const nextStep = () => setStep(prev => Math.min(prev + 1, 4));
+  const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
   return (
     <div className="app-container font-sans overflow-hidden">
@@ -45,8 +70,7 @@ export default function App() {
       <section className="left-section">
         {/* Testimonial Infinite Grid */}
         <div className="testimonial-container absolute top-0 left-0 w-full pt-10 px-6 opacity-40 select-none">
-          {[0, 1, 2].map((colIndex) => {
-            const columnData = [...TESTIMONIALS].sort(() => Math.random() - 0.5);
+          {COLUMNS.map((columnData, colIndex) => {
             return (
               <div key={colIndex} className={cn(
                 "testimonial-column",
@@ -97,135 +121,506 @@ export default function App() {
             className="flex items-center gap-4"
           >
             {[Facebook, Instagram, Linkedin, Twitter].map((Icon, i) => (
-              <a 
+              <Link
                 key={i} 
-                href="#" 
-                className="social-icon hover:bg-black/90 hover:scale-110 transition-all border border-black/5 shadow-sm"
+                to="/"
+                className="social-icon transition-all border border-black/5 shadow-sm"
               >
                 <Icon size={20} />
-              </a>
+              </Link>
             ))}
-            <a href="#" className="social-icon hover:bg-black/90 hover:scale-110 transition-all border border-black/5 shadow-sm font-bold text-sm">
-              Bē
-            </a>
           </motion.div>
         </div>
       </section>
   
 
       {/* Right Section: Form */}
-      <section className="right-section flex flex-col">
+      <section className="right-section flex flex-col justify-center relative py-8">
         <div className="max-w-xl mx-auto w-full">
-          {/* Main Heading */}
-          <motion.h2 
-            initial={{ opacity: 0, y: -60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.6 }}
-            className="text-5xl md:text-6xl font-display mb-12 leading-[1.1] tracking-tight text-white/90"
-          >
-            What services <br />
-            <span className="text-white/20">we can support <br /> you with?</span>
-          </motion.h2>
-
-          {/* Subheader */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.8 }}
-            className="mb-8"
-          >
-            <h2 className="text-sm font-bold text-white mb-2">About your company</h2>
-            <p className="text-white/50 text-base">Let's start with the basics so we can tailor our approach.</p>
-          </motion.div>
-
-          <div className="space-y-6">
-            {/* Input Group 1 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+          {/* Static Main Heading for all steps */}
+          {!isSubmitted && (
+            <motion.h2 
+              initial={{ opacity: 0, y: -40 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.0 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+              className="text-5xl md:text-6xl font-display mb-10 leading-[1.05] tracking-tight text-white/90"
             >
-              <div>
-                <label className="boxed-label">Company name</label>
-                <input 
-                  type="text" 
-                  placeholder="Acme Corp"
-                  className="boxed-input" 
-                  value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="boxed-label">Industry</label>
-                <select className="boxed-input cursor-pointer appearance-none">
-                  <option value="">Select industry</option>
-                  <option value="saas">SaaS / Software</option>
-                  <option value="fintech">Fintech</option>
-                  <option value="healthcare">Healthcare</option>
-                  <option value="ecommerce">E-commerce</option>
-                  <option value="media">Media & Entertainment</option>
-                  <option value="manufacturing">Manufacturing</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </motion.div>
+              What services <br />
+              <span className="text-white/20">we can support <br /> you with?</span>
+            </motion.h2>
+          )}
 
-            {/* Input Group 2 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.1 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
-            >
-              <div>
-                <label className="boxed-label">Company size</label>
-                <select className="boxed-input cursor-pointer appearance-none">
-                  <option value="">Select size</option>
-                  <option value="1-10">1-10 employees</option>
-                  <option value="11-50">11-50</option>
-                  <option value="51-200">51-200</option>
-                  <option value="201-1000">201-1000</option>
-                  <option value="1000+">1000+</option>
-                </select>
-              </div>
-              <div>
-                <label className="boxed-label">Your role</label>
-                <input 
-                  type="text" 
-                  placeholder="CTO, DevOps Lead..."
-                  className="boxed-input"
-                />
-              </div>
-            </motion.div>
+          <AnimatePresence mode="wait">
+            {isSubmitted ? (
+               <motion.div
+                 key="success"
+                 initial={{ opacity: 0, scale: 0.9 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                 className="success-screen"
+               >
+                 <motion.div 
+                   initial={{ opacity: 0, y: 20 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ delay: 0.2 }}
+                   className="success-icon-container"
+                 >
+                   <div className="success-icon-bg" />
+                   <div className="success-icon">
+                     <Check size={48} strokeWidth={3} />
+                   </div>
+                 </motion.div>
 
-            {/* Website Field */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.2 }}
-            >
-              <label className="boxed-label">Website (optional)</label>
-              <input 
-                type="text" 
-                placeholder="https://"
-                className="boxed-input"
-              />
-            </motion.div>
+                 <motion.h2 
+                   initial={{ opacity: 0, y: 20 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ delay: 0.4 }}
+                   className="text-5xl md:text-7xl font-display font-bold mb-6 gradient-text-gold"
+                 >
+                   Thank You!
+                 </motion.h2>
 
-            {/* Next Button */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 1.4 }}
-              className="flex justify-end pt-4"
-            >
-              <button className="next-btn group">
-                Next
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-              </button>
-            </motion.div>
-          </div>
+                 <motion.p 
+                   initial={{ opacity: 0, y: 20 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ delay: 0.6 }}
+                   className="text-white/60 text-lg max-w-md mx-auto leading-relaxed"
+                 >
+                   We've received your plan. Our team will review the details and reach out to you within 24 hours.
+                 </motion.p>
+
+                 <motion.div
+                   initial={{ opacity: 0, y: 20 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ delay: 0.8 }}
+                   className="mt-12"
+                 >
+                   <button 
+                     onClick={() => { setIsSubmitted(false); setStep(1); }}
+                     className="secondary-btn"
+                   >
+                     Back to Home
+                   </button>
+                 </motion.div>
+               </motion.div>
+            ) : step === 1 ? (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {/* Subheader */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+                  className="mb-4"
+                >
+                  <h2 className="text-sm font-bold text-white mb-1">About your company</h2>
+                </motion.div>
+
+                <div className="space-y-4">
+                  {/* Step 1 Input Groups... */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
+                    <div>
+                      <label className="boxed-label">Company name</label>
+                      <input 
+                        type="text" 
+                        placeholder="Acme Corp"
+                        className="boxed-input" 
+                        value={formData.name}
+                        onChange={e => setFormData({...formData, name: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <label className="boxed-label">Industry</label>
+                      <select className="boxed-input cursor-pointer appearance-none">
+                        <option value="">Select industry</option>
+                        <option value="saas">SaaS / Software</option>
+                        <option value="fintech">Fintech</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="ecommerce">E-commerce</option>
+                        <option value="media">Media & Entertainment</option>
+                        <option value="manufacturing">Manufacturing</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
+                    <div>
+                      <label className="boxed-label">Company size</label>
+                      <select className="boxed-input cursor-pointer appearance-none">
+                        <option value="">Select size</option>
+                        <option value="1-10">1-10 employees</option>
+                        <option value="11-50">11-50</option>
+                        <option value="51-200">51-200</option>
+                        <option value="201-1000">201-1000</option>
+                        <option value="1000+">1000+</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="boxed-label">Your role</label>
+                      <input 
+                        type="text" 
+                        placeholder="CTO, DevOps Lead..."
+                        className="boxed-input"
+                      />
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.6 }}
+                  >
+                    <label className="boxed-label">Website (optional)</label>
+                    <input 
+                      type="text" 
+                      placeholder="https://"
+                      className="boxed-input"
+                    />
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.7 }}
+                    className="flex justify-end pt-2"
+                  >
+                    <button onClick={nextStep} className="next-btn group">
+                      Next
+                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </motion.div>
+                </div>
+              </motion.div>
+            ) : step === 2 ? (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {/* Subheader */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+                  className="mb-4"
+                >
+                  <h2 className="text-sm font-bold text-white mb-1">Current infrastructure</h2>
+                </motion.div>
+
+                <div className="space-y-4">
+                  {/* Cloud Providers Dropdown */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+                  >
+                    <label className="boxed-label">Which cloud providers are you currently using?</label>
+                    <select 
+                      className="boxed-input cursor-pointer appearance-none mt-1"
+                      value={formData.cloudProviders[0] || ""}
+                      onChange={(e) => setFormData({ ...formData, cloudProviders: [e.target.value] })}
+                    >
+                      <option value="">Select provider</option>
+                      {CLOUD_PROVIDERS.map((provider) => (
+                        <option key={provider} value={provider}>{provider}</option>
+                      ))}
+                    </select>
+                  </motion.div>
+
+                  {/* DevOps Tools Dropdown */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
+                  >
+                    <label className="boxed-label">What DevOps tools do you use?</label>
+                    <select 
+                      className="boxed-input cursor-pointer appearance-none mt-1"
+                      value={formData.devOpsTools[0] || ""}
+                      onChange={(e) => setFormData({ ...formData, devOpsTools: [e.target.value] })}
+                    >
+                      <option value="">Select tool</option>
+                      {DEVOPS_TOOLS.map((tool) => (
+                        <option key={tool} value={tool}>{tool}</option>
+                      ))}
+                    </select>
+                  </motion.div>
+
+                  {/* Cloud Spend */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.6 }}
+                  >
+                    <label className="boxed-label">Monthly cloud spend (approx.)</label>
+                    <select 
+                      className="boxed-input cursor-pointer appearance-none mt-1"
+                      value={formData.cloudSpend}
+                      onChange={(e) => setFormData({ ...formData, cloudSpend: e.target.value })}
+                    >
+                      <option value="">Select spend</option>
+                      <option value="<500">Less than $500</option>
+                      <option value="500-2000">$500–$2,000</option>
+                      <option value="2000-10000">$2,000–$10,000</option>
+                      <option value="10000-50000">$10,000–$50,000</option>
+                      <option value="50000+">$50,000+</option>
+                      <option value="not-sure">Not sure</option>
+                    </select>
+                  </motion.div>
+
+                  {/* Footer Buttons */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.7 }}
+                    className="flex justify-between items-center pt-4"
+                  >
+                    <button onClick={prevStep} className="secondary-btn">
+                      Back
+                    </button>
+                    <button onClick={nextStep} className="next-btn group">
+                      Next
+                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </motion.div>
+                </div>
+              </motion.div>
+            ) : step === 3 ? (
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {/* Subheader */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+                  className="mb-4"
+                >
+                  <h2 className="text-sm font-bold text-white mb-1">Goals & pain points</h2>
+                </motion.div>
+
+                <div className="space-y-4">
+                  {/* Goals Dropdown */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+                  >
+                    <label className="boxed-label">What are your main goals?</label>
+                    <select 
+                      className="boxed-input cursor-pointer appearance-none mt-1"
+                      value={formData.mainGoals}
+                      onChange={(e) => setFormData({ ...formData, mainGoals: e.target.value })}
+                    >
+                      <option value="">Select a goal</option>
+                      <option value="costs">Cut cloud costs</option>
+                      <option value="reliability">Improve reliability / uptime</option>
+                      <option value="deployments">Faster deployments</option>
+                      <option value="security">Security & compliance</option>
+                      <option value="scaling">Scale infrastructure</option>
+                      <option value="migration">Migrate to cloud</option>
+                      <option value="cicd">Setup CI/CD pipeline</option>
+                      <option value="monitoring">Monitoring & observability</option>
+                    </select>
+                  </motion.div>
+
+                  {/* Pain Points Textarea */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
+                  >
+                    <label className="boxed-label">Biggest pain point right now</label>
+                    <textarea 
+                      placeholder="e.g. Deployments take too long and are error-prone..."
+                      className="boxed-input min-h-[80px] py-3 resize-none"
+                      value={formData.painPoint}
+                      onChange={(e) => setFormData({ ...formData, painPoint: e.target.value })}
+                    />
+                  </motion.div>
+
+                  {/* Urgency Slider */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.6 }}
+                    className="space-y-3"
+                  >
+                    <label className="boxed-label">How urgent is this project?</label>
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs text-white/40 font-medium">Exploring</span>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="100" 
+                        className="flex-1 accent-white h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                        value={formData.urgency}
+                        onChange={(e) => setFormData({ ...formData, urgency: parseInt(e.target.value) })}
+                      />
+
+                      <span className="text-sm font-bold text-white min-w-[120px] text-right">
+                        {formData.urgency <= 20 ? "Just exploring" : 
+                         formData.urgency <= 40 ? "Low priority" : 
+                         formData.urgency <= 60 ? "Moderate" : 
+                         formData.urgency <= 80 ? "High Priority" : "ASAP"}
+                      </span>
+                    </div>
+                  </motion.div>
+
+                  {/* Footer Buttons */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.7 }}
+                    className="flex justify-between items-center pt-2"
+                  >
+                    <button onClick={prevStep} className="secondary-btn">
+                      Back
+                    </button>
+                    <button onClick={nextStep} className="next-btn group">
+                      Next
+                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </motion.div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {/* Subheader */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+                  className="mb-4"
+                >
+                  <h2 className="text-sm font-bold text-white mb-1">Budget & timeline</h2>
+                </motion.div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Budget Dropdown */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+                    >
+                      <label className="boxed-label">Project budget range</label>
+                      <select 
+                        className="boxed-input cursor-pointer appearance-none mt-1"
+                        value={formData.budget}
+                        onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
+                      >
+                        <option value="">Select range</option>
+                        <option value="under-5k">Under $5,000</option>
+                        <option value="5k-15k">$5,000–$15,000</option>
+                        <option value="15k-50k">$15,000–$50,000</option>
+                        <option value="50k-150k">$50,000–$150,000</option>
+                        <option value="150k-plus">$150,000+</option>
+                        <option value="to-be-discussed">To be discussed</option>
+                      </select>
+                    </motion.div>
+
+                    {/* Start Date */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
+                    >
+                      <label className="boxed-label">Expected start date</label>
+                      <input 
+                        type="date" 
+                        className="boxed-input mt-1"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      />
+                    </motion.div>
+                  </div>
+
+                  {/* Engagement Type Dropdown */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.6 }}
+                  >
+                    <label className="boxed-label">Engagement type</label>
+                    <select 
+                      className="boxed-input cursor-pointer appearance-none mt-1"
+                      value={formData.engagementType}
+                      onChange={(e) => setFormData({ ...formData, engagementType: e.target.value })}
+                    >
+                      <option value="">Select type</option>
+                      <option value="One-time project">One-time project</option>
+                      <option value="Ongoing retainer">Ongoing retainer</option>
+                      <option value="Advisory / consulting">Advisory / consulting</option>
+                      <option value="Training / upskilling">Training / upskilling</option>
+                    </select>
+                  </motion.div>
+
+                  {/* Additional Notes */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.7 }}
+                  >
+                    <label className="boxed-label">Anything else we should know?</label>
+                    <textarea 
+                      placeholder="Special requirements, compliance needs, team structure..."
+                      className="boxed-input min-h-[80px] py-3 resize-none"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    />
+                  </motion.div>
+
+                  {/* Footer Buttons */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.8 }}
+                    className="flex justify-between items-center pt-2"
+                  >
+                    <button onClick={prevStep} className="secondary-btn">
+                      Back
+                    </button>
+                    <button 
+                      onClick={() => setIsSubmitted(true)}
+                      className="next-btn group"
+                    >
+                      Submit
+                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
     </div>
